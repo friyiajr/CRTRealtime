@@ -1,37 +1,41 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import { Image as RNImage } from "react-native";
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { Canvas, Image, useVideo } from "@shopify/react-native-skia";
+import React, { useState } from "react";
+import { Pressable, useWindowDimensions } from "react-native";
+import { CRT } from "./CRT";
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+const clip = require("../clip.mp4");
+const exampleImageUri = RNImage.resolveAssetSource(clip).uri;
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+  const [isShaderApplied, setIsShaderApplied] = useState(true);
+  const { width, height } = useWindowDimensions();
+  const { currentFrame } = useVideo(exampleImageUri, {
+    volume: 10,
+    looping: true,
   });
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-    </ThemeProvider>
+    <Pressable
+      style={{ flex: 1 }}
+      onPress={() => {
+        setIsShaderApplied(!isShaderApplied);
+      }}
+      onLongPress={() => {}}
+    >
+      <Canvas style={{ flex: 1 }}>
+        <CRT isShaderApplied={isShaderApplied}>
+          <Image
+            image={currentFrame}
+            x={0}
+            y={0}
+            width={width}
+            height={height}
+            fit={"fill"}
+          />
+        </CRT>
+      </Canvas>
+    </Pressable>
   );
 }
